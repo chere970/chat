@@ -10,9 +10,9 @@
     <h1>Let's Chat</h1>
     <script type="text/javascript">
       {% comment %} const roomName = JSON.parse(document.getElementById('room-name').textContent); {% endcomment %}
-   
+
         let url=`ws://${window.location.host}/ws/socket-server/`;
-        const chatSocket=new webSocket(url);
+        const chatSocket=new WebSocket(url);
         chatSocket.onmessage=function(e){
             let data=JSON.parse(e.data);
             console.log('Data:',data);
