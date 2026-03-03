@@ -31,15 +31,15 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    # 'daphne',  # Must be first so runserver uses ASGI instead of WSGI
+    'daphne',  # Must be first so runserver uses ASGI instead of WSGI
     'channels',
+    'chat',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'chat',
 ]
 
 ASGI_APPLICATION = 'chatapp.asgi.application'
