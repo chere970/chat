@@ -1,0 +1,119 @@
+{% extends "chat/base.html" %}
+{% load static %}
+
+{% block title %}{{ room.name }} · Relay{% endblock %}
+{% block body_class %}page-room{% endblock %}
+
+{% block content %}
+  {% if not display_name %}
+    <header class="room-top">
+      <a class="brand brand-compact" href="{% url 'home' %}">Relay</a>
+    </header>
+    <section class="join-gate">
+      <h2>Choose a display name</h2>
+      <p>Others in this room will see this when you chat.</p>
+      <form method="post" action="{% url 'set_display_name' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}" />
+        <label class="field">
+          <span>Display name</span>
+          <input
+            type="text"
+            name="display_name"
+            maxlength="32"
+            required
+            autocomplete="nickname"
+            placeholder="e.g. Jordan"
+            pattern="[\w .-]{2,32}"
+          />
+        </label>
+        <button type="submit" class="btn-primary">Enter room</button>
+      </form>
+    </section>
+  {% else %}
+    <div
+      id="chat-app"
+      class="chat-shell"
+      data-room-slug="{{ room.slug }}"
+      data-username="{{ display_name }}"
+    >
+      <header class="chat-toolbar">
+        <a class="back-link" href="{% url 'home' %}" aria-label="Back to rooms">
+          <span aria-hidden="true">←</span>
+        </a>
+        <div class="toolbar-main">
+          <div class="room-avatar" aria-hidden="true">{{ room.name|make_list|first|upper }}</div>
+          <div class="toolbar-text">
+            <div class="toolbar-title-row">
+              <a class="brand brand-compact" href="{% url 'home' %}">Relay</a>
+              <span class="toolbar-sep" aria-hidden="true">/</span>
+              <h1>{{ room.name }}</h1>
+            </div>
+            <p class="status-line">
+              <span class="status-dot" data-status="connecting" aria-hidden="true"></span>
+              <span id="connection-status">Connecting…</span>
+              <span class="presence" id="presence-label" hidden></span>
+            </p>
+          </div>
+        </div>
+        <div class="you-chip" title="Signed in as {{ display_name }}">
+          <span class="avatar avatar-sm" data-user="{{ display_name }}"></span>
+          <span>{{ display_name }}</span>
+        </div>
+      </header>
+
+      <div id="message-list" class="message-list" role="log" aria-live="polite" aria-relevant="additions">
+        {% for msg in messages_history %}
+          <article
+            class="message{% if msg.username == display_name %} mine{% endif %}"
+            data-id="{{ msg.id }}"
+            data-user="{{ msg.username }}"
+          >
+            <div class="avatar" data-user="{{ msg.username }}" aria-hidden="true"></div>
+            <div class="bubble">
+              <header class="bubble-meta">
+                <span class="msg-user">{{ msg.username }}</span>
+                <time datetime="{{ msg.created_at|date:'c' }}">{{ msg.created_at|time:"g:i A" }}</time>
+              </header>
+              <p class="bubble-text">{{ msg.content }}</p>
+            </div>
+          </article>
+        {% empty %}
+          <div class="empty-chat" id="empty-chat">
+            <div class="empty-orb" aria-hidden="true"></div>
+            <p>Room is quiet</p>
+            <span>Send the first message to open the floor.</span>
+          </div>
+        {% endfor %}
+      </div>
+
+      <form id="chat-form" class="composer" autocomplete="off">
+        <label class="sr-only" for="chat-input">Message</label>
+        <div class="composer-field">
+          <input
+            id="chat-input"
+            type="text"
+            maxlength="1000"
+            placeholder="Write a message…"
+            required
+          />
+        </div>
+        <button type="submit" class="send-btn" aria-label="Send message">
+          <span>Send</span>
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M3.4 20.6 21 12 3.4 3.4l-.1 7.1L14 12l-10.7 1.5z"
+            />
+          </svg>
+        </button>
+      </form>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  {% if display_name %}
+    <script src="{% static 'chat/js/room.js' %}" defer></script>
+  {% endif %}
+{% endblock %}

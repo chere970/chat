@@ -1,0 +1,71 @@
+{% extends "chat/base.html" %}
+
+{% block title %}Relay — real-time rooms{% endblock %}
+{% block body_class %}page-home{% endblock %}
+
+{% block content %}
+  <header class="site-header">
+    <a class="brand" href="{% url 'home' %}">Relay</a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="brand-mark">Relay</p>
+      <h1>Rooms that move at conversation speed.</h1>
+      <p class="lede">
+        Pick a name, open a room, and talk live — Django Channels under the hood.
+      </p>
+      <form class="identity-form" method="post" action="{% url 'create_room' %}">
+        {% csrf_token %}
+        <label class="field">
+          <span>Your display name</span>
+          <input
+            type="text"
+            name="display_name"
+            value="{{ display_name }}"
+            maxlength="32"
+            required
+            autocomplete="nickname"
+            placeholder="e.g. Maya"
+          />
+        </label>
+        <label class="field">
+          <span>Room name</span>
+          <input
+            type="text"
+            name="name"
+            maxlength="64"
+            required
+            placeholder="e.g. design-critique"
+            pattern="[\w .-]{2,64}"
+          />
+        </label>
+        <button type="submit" class="btn-primary">Open room</button>
+      </form>
+    </section>
+
+    <section class="rooms" aria-labelledby="rooms-heading">
+      <h2 id="rooms-heading">Open rooms</h2>
+      <p class="section-lede">Jump into an existing conversation, or create one above.</p>
+
+      {% if rooms %}
+        <ul class="room-list">
+          {% for room in rooms %}
+            <li>
+              <a class="room-link" href="{% url 'room' room.slug %}">
+                <span class="room-name">{{ room.name }}</span>
+                <span class="room-meta">{{ room.message_count }} message{{ room.message_count|pluralize }}</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty-state">No rooms yet — yours can be the first.</p>
+      {% endif %}
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Built with Django, Channels, and Daphne.</p>
+  </footer>
+{% endblock %}
