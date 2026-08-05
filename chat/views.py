@@ -1,6 +1,7 @@
 import re
 
 from django.contrib import messages
+from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.text import slugify
 from django.views.decorators.http import require_http_methods
@@ -12,7 +13,7 @@ USERNAME_RE = re.compile(r"^[\w .-]{2,32}$")
 
 
 def home(request):
-    rooms = Room.objects.all()[:24]
+    rooms = Room.objects.annotate(message_count=Count("messages"))[:24]
     display_name = request.session.get("display_name", "")
     return render(
         request,

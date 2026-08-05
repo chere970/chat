@@ -45,7 +45,7 @@ def room_list(request):
         )
 
     room, created = Room.objects.get_or_create(slug=slug, defaults={"name": name})
-    room.message_count = room.messages.count()
+    room = Room.objects.annotate(message_count=Count("messages")).get(pk=room.pk)
     serializer = RoomSerializer(room)
     return Response(
         serializer.data,

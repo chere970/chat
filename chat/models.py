@@ -18,10 +18,6 @@ class Room(models.Model):
             self.slug = slugify(self.name)[:64]
         super().save(*args, **kwargs)
 
-    @property
-    def message_count(self):
-        return self.messages.count()
-
 
 class Message(models.Model):
     room = models.ForeignKey(Room, related_name="messages", on_delete=models.CASCADE)
