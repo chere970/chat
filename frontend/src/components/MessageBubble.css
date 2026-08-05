@@ -1,0 +1,90 @@
+.msg {
+  display: flex;
+  gap: 0.6rem;
+  max-width: min(85%, 36rem);
+  animation: fadeIn 0.3s ease both;
+  position: relative;
+}
+.msg:hover .msg-actions { opacity: 1; pointer-events: auto; }
+.msg-mine { align-self: flex-end; flex-direction: row-reverse; }
+.msg-stacked { margin-top: -0.3rem; }
+.msg-stacked .msg-avatar-col { visibility: hidden; }
+.msg-avatar-col { flex-shrink: 0; width: 2.2rem; padding-top: 0.2rem; }
+
+.msg-content { min-width: 0; }
+
+.msg-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.msg-user { font-weight: 600; font-size: 0.82rem; color: var(--text); }
+.msg-meta time { color: var(--text-muted); font-size: 0.7rem; }
+.msg-mine .msg-meta { flex-direction: row-reverse; }
+
+.msg-bubble {
+  padding: 0.6rem 0.9rem;
+  border-radius: 18px 18px 18px 6px;
+  background: var(--bubble-other);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(8px);
+  transition: background var(--transition);
+}
+.msg-mine .msg-bubble {
+  border-radius: 18px 18px 6px 18px;
+  background: var(--bubble-mine);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(99,102,241,0.2);
+}
+.msg-bubble p { margin: 0; white-space: pre-wrap; word-break: break-word; line-height: 1.45; font-size: 0.95rem; }
+
+.msg-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+}
+.reaction-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.reaction-chip:hover { background: var(--surface-hover); }
+.reaction-chip.reaction-mine { border-color: var(--accent); background: var(--accent-glow); }
+.reaction-chip span { font-size: 0.7rem; color: var(--text-secondary); }
+
+.msg-actions {
+  display: flex;
+  gap: 0.15rem;
+  position: absolute;
+  top: -0.6rem;
+  right: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  padding: 0.15rem 0.25rem;
+  box-shadow: var(--shadow-sm);
+}
+.msg-mine .msg-actions { right: auto; left: 0; }
+.react-btn {
+  width: 1.6rem;
+  height: 1.6rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  transition: all 0.15s ease;
+}
+.react-btn:hover { background: var(--surface-hover); transform: scale(1.2); }

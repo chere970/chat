@@ -1,0 +1,121 @@
+.home { min-height: 100vh; display: flex; flex-direction: column; }
+
+.home-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.2rem 2rem; position: sticky; top: 0; z-index: 10;
+  background: var(--glass); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border);
+}
+.home-brand { display: flex; align-items: center; gap: 0.6rem; }
+.brand-icon {
+  width: 2.2rem; height: 2.2rem; display: grid; place-items: center;
+  border-radius: var(--radius-sm); background: var(--accent-gradient); color: #fff;
+}
+.brand-text { font-family: var(--font-display); font-weight: 800; font-size: 1.3rem; letter-spacing: -0.03em; }
+.theme-toggle {
+  width: 2.4rem; height: 2.4rem; display: grid; place-items: center;
+  border-radius: var(--radius-sm); border: 1px solid var(--glass-border);
+  background: var(--surface); color: var(--text-secondary); transition: all var(--transition);
+}
+.theme-toggle:hover { background: var(--surface-hover); color: var(--text); transform: rotate(15deg); }
+
+.home-main { flex: 1; max-width: 860px; width: 100%; margin: 0 auto; padding: 0 1.5rem; }
+
+.hero { padding: 4rem 0 3rem; animation: slideUp 0.6s ease both; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.9rem;
+  border-radius: 999px; background: var(--accent-glow); color: var(--accent-hover);
+  font-size: 0.78rem; font-weight: 600; margin-bottom: 1.2rem; border: 1px solid rgba(99,102,241,0.2);
+}
+.hero h1 {
+  font-family: var(--font-display); font-weight: 800; font-size: clamp(2rem, 5vw, 3.2rem);
+  line-height: 1.1; letter-spacing: -0.04em; margin-bottom: 1rem;
+}
+.gradient-text {
+  background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-sub { color: var(--text-secondary); font-size: 1.1rem; max-width: 38ch; line-height: 1.6; margin-bottom: 2rem; }
+
+.create-form { animation: slideUp 0.6s ease 0.1s both; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 0.8rem; }
+.field { display: flex; flex-direction: column; gap: 0.35rem; }
+.field label { font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); }
+.field input {
+  padding: 0.85rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--glass-border);
+  background: var(--surface); color: var(--text); transition: all var(--transition);
+  backdrop-filter: blur(8px);
+}
+.field input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.field input::placeholder { color: var(--text-muted); }
+
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.9rem 1.6rem;
+  border-radius: var(--radius-sm); background: var(--accent-gradient); color: #fff;
+  font-weight: 600; font-size: 0.95rem; transition: all var(--transition);
+  box-shadow: 0 4px 16px rgba(99,102,241,0.3);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99,102,241,0.4); }
+.btn-primary:active { transform: translateY(0); }
+.form-error { margin-top: 0.6rem; color: var(--danger); font-size: 0.85rem; }
+
+.features {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
+  padding: 2rem 0 3rem; animation: slideUp 0.6s ease 0.2s both;
+}
+.feature-card {
+  padding: 1.5rem; border-radius: var(--radius); background: var(--surface);
+  border: 1px solid var(--glass-border); backdrop-filter: blur(8px); transition: all var(--transition);
+}
+.feature-card:hover { background: var(--surface-hover); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.feature-icon {
+  width: 2.6rem; height: 2.6rem; display: grid; place-items: center;
+  border-radius: var(--radius-sm); background: var(--accent-glow); color: var(--accent);
+  margin-bottom: 0.8rem;
+}
+.feature-card h3 { font-family: var(--font-display); font-size: 1rem; margin-bottom: 0.3rem; }
+.feature-card p { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; }
+
+.rooms-section { padding-bottom: 3rem; animation: slideUp 0.6s ease 0.3s both; }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 1rem; }
+.section-head h2 { font-family: var(--font-display); font-size: 1.5rem; letter-spacing: -0.03em; }
+.room-count { color: var(--text-muted); font-size: 0.85rem; }
+
+.room-list { display: grid; gap: 0.5rem; }
+.room-list li { animation: fadeIn 0.4s ease both; }
+.room-card {
+  width: 100%; display: flex; align-items: center; gap: 1rem; padding: 1rem 1.2rem;
+  border-radius: var(--radius); background: var(--surface); border: 1px solid var(--glass-border);
+  transition: all var(--transition); text-align: left; color: var(--text);
+}
+.room-card:hover { background: var(--surface-hover); transform: translateX(4px); border-color: var(--accent); }
+.room-card-info { flex: 1; min-width: 0; }
+.room-card-name { display: block; font-weight: 600; font-size: 0.95rem; }
+.room-card-meta { display: block; color: var(--text-muted); font-size: 0.8rem; margin-top: 0.15rem; }
+.room-card-arrow { color: var(--text-muted); transition: all var(--transition); flex-shrink: 0; }
+.room-card:hover .room-card-arrow { color: var(--accent); transform: translateX(2px); }
+
+.rooms-loading { display: grid; gap: 0.5rem; }
+.room-skeleton {
+  height: 4.5rem; border-radius: var(--radius); background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
+  background-size: 200% 100%; animation: shimmer 1.5s ease infinite;
+}
+
+.empty-rooms { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+.empty-orb {
+  width: 3.5rem; height: 3.5rem; border-radius: 50%; margin: 0 auto 1rem;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.15), transparent 40%), var(--accent-gradient);
+  animation: float 3s ease-in-out infinite;
+}
+.empty-rooms p { font-family: var(--font-display); font-size: 1.1rem; color: var(--text); margin-bottom: 0.3rem; }
+.empty-rooms span { font-size: 0.9rem; }
+
+.home-footer { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.85rem; }
+
+@media (max-width: 600px) {
+  .home-header { padding: 1rem 1.2rem; }
+  .home-main { padding: 0 1rem; }
+  .hero { padding: 2.5rem 0 2rem; }
+  .form-row { grid-template-columns: 1fr; }
+  .features { grid-template-columns: 1fr; }
+  .btn-primary { width: 100%; justify-content: center; }
+}

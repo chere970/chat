@@ -1,0 +1,16 @@
+.avatar {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--avatar-bg, var(--accent));
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
+  user-select: none;
+}
+.avatar-sm { width: 1.6rem; height: 1.6rem; font-size: 0.55rem; }
+.avatar-md { width: 2.2rem; height: 2.2rem; font-size: 0.7rem; }
+.avatar-lg { width: 2.8rem; height: 2.8rem; font-size: 0.85rem; }
+.avatar-xl { width: 3.5rem; height: 3.5rem; font-size: 1rem; }

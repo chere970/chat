@@ -12,6 +12,9 @@ SLUG_RE = re.compile(r"^[-a-zA-Z0-9_]{1,64}$")
 # Process-local presence for the in-memory demo channel layer.
 ROOM_PRESENCE: dict[str, set[str]] = defaultdict(set)
 
+# Process-local store for message reactions (in production, use DB).
+MESSAGE_REACTIONS: dict[int, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
+
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -56,6 +59,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             await self.handle_join(content)
         elif event_type == "chat_message":
             await self.handle_chat_message(content)
+        elif event_type == "typing":
+            await self.handle_typing(content)
+        elif event_type == "reaction":
+            await self.handle_reaction(content)
 
     async def handle_join(self, content):
         username = (content.get("username") or "").strip()
@@ -102,6 +109,54 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             },
         )
 
+    async def handle_typing(self, content):
+        """Broadcast typing indicator to the group (except sender)."""
+        if not self.username:
+            return
+        is_typing = bool(content.get("is_typing", False))
+        await self.channel_layer.group_send(
+            self.room_group,
+            {
+                "type": "typing.event",
+                "username": self.username,
+                "is_typing": is_typing,
+                "sender_channel": self.channel_name,
+            },
+        )
+
+    async def handle_reaction(self, content):
+        """Toggle an emoji reaction on a message."""
+        if not self.username:
+            return
+        message_id = content.get("message_id")
+        emoji = (content.get("emoji") or "").strip()
+        if not message_id or not emoji or len(emoji) > 4:
+            return
+
+        reactions = MESSAGE_REACTIONS[message_id]
+        if self.username in reactions[emoji]:
+            reactions[emoji].discard(self.username)
+            if not reactions[emoji]:
+                del reactions[emoji]
+        else:
+            reactions[emoji].add(self.username)
+
+        # Serialize reactions
+        serialized = {
+            k: sorted(list(v)) for k, v in reactions.items() if v
+        }
+
+        await self.channel_layer.group_send(
+            self.room_group,
+            {
+                "type": "reaction.event",
+                "message_id": message_id,
+                "reactions": serialized,
+            },
+        )
+
+    # ── Group event handlers ─────────────────────────────────────────
+
     async def chat_message(self, event):
         await self.send_json(
             {
@@ -122,6 +177,29 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 "users": event.get("users", []),
             }
         )
+
+    async def typing_event(self, event):
+        # Don't send typing indicator back to the sender
+        if event.get("sender_channel") == self.channel_name:
+            return
+        await self.send_json(
+            {
+                "type": "typing",
+                "username": event["username"],
+                "is_typing": event["is_typing"],
+            }
+        )
+
+    async def reaction_event(self, event):
+        await self.send_json(
+            {
+                "type": "reaction",
+                "message_id": event["message_id"],
+                "reactions": event["reactions"],
+            }
+        )
+
+    # ── DB helpers ───────────────────────────────────────────────────
 
     @database_sync_to_async
     def get_room(self, slug):
