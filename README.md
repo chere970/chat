@@ -33,6 +33,8 @@ Optional env vars (see `.env.example`):
 | `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` | Comma-separated hosts |
 | `DJANGO_CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Allowed frontend origins |
 | `DJANGO_CSRF_TRUSTED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Trusted browser origins |
+| `DATABASE_URL` | unset | Postgres connection URL (e.g. from Neon/Render) |
+| `REDIS_URL` | unset | Redis connection URL for Channels (optional) |
 
 ## Architecture
 

@@ -4,6 +4,7 @@ Django settings for chatapp project.
 
 import os
 from pathlib import Path
+from urllib.parse import urlparse, parse_qs
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -59,18 +60,21 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "chatapp.urls"
 
-# InMemory is fine for local demo. For multi-process deploy, use Redis:
-# CHANNEL_LAYERS = {
-#     "default": {
-#         "BACKEND": "channels_redis.core.RedisChannelLayer",
-#         "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
-#     }
-# }
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
+# Channel layer selection: prefer Redis when REDIS_URL is provided.
+REDIS_URL = os.environ.get("REDIS_URL")
+if REDIS_URL:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {"hosts": [REDIS_URL]},
+        }
     }
-}
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        }
+    }
 
 TEMPLATES = [
     {
@@ -89,12 +93,42 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "chatapp.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL:
+    # Parse a DATABASE_URL like: postgres://user:pass@host:port/dbname?sslmode=require
+    url = urlparse(DATABASE_URL)
+    if url.scheme.startswith("postgres"):
+        qs = parse_qs(url.query)
+        options = {}
+        if "sslmode" in qs:
+            options["sslmode"] = qs["sslmode"][0]
+
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": url.path.lstrip("/"),
+                "USER": url.username,
+                "PASSWORD": url.password,
+                "HOST": url.hostname,
+                "PORT": url.port or "",
+                "OPTIONS": options,
+            }
+        }
+    else:
+        # Fallback to sqlite if the URL scheme is unexpected
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": BASE_DIR / "db.sqlite3",
+            }
+        }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
