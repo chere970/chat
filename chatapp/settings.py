@@ -20,6 +20,16 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
+DEFAULT_CORS_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+DEFAULT_CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
 INSTALLED_APPS = [
     "daphne",
     "channels",
@@ -103,11 +113,25 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# CORS — allow React dev server in development
+# CORS / CSRF — allow the Vite dev server locally and the Vercel frontend in production.
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    origin.strip()
+    for origin in os.environ.get(
+        "DJANGO_CORS_ALLOWED_ORIGINS",
+        ",".join(DEFAULT_CORS_ORIGINS),
+    ).split(",")
+    if origin.strip()
 ]
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get(
+        "DJANGO_CSRF_TRUSTED_ORIGINS",
+        ",".join(DEFAULT_CSRF_TRUSTED_ORIGINS),
+    ).split(",")
+    if origin.strip()
+]
+
 CORS_ALLOW_CREDENTIALS = True
 
 # DRF defaults

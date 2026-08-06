@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
+import { getWebSocketUrl } from '../config'
 
 export function useWebSocket(roomSlug, username, onMessage) {
   const wsRef = useRef(null)
@@ -7,8 +8,7 @@ export function useWebSocket(roomSlug, username, onMessage) {
 
   const connect = useCallback(() => {
     if (!roomSlug) return
-    const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
-    const url = `${proto}://${window.location.host}/ws/chat/${roomSlug}/`
+    const url = getWebSocketUrl(roomSlug)
     const ws = new WebSocket(url)
     wsRef.current = ws
 

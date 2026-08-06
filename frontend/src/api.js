@@ -1,4 +1,6 @@
-const BASE = '/api'
+import { getApiBase } from './config'
+
+const BASE = getApiBase()
 
 async function parseJson(res) {
   const contentType = res.headers.get('content-type') || ''

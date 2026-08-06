@@ -31,6 +31,8 @@ Optional env vars (see `.env.example`):
 | `DJANGO_SECRET_KEY` | insecure dev key | Django secret |
 | `DJANGO_DEBUG` | `1` | Debug mode |
 | `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` | Comma-separated hosts |
+| `DJANGO_CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Allowed frontend origins |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Trusted browser origins |
 
 ## Architecture
 
@@ -55,8 +57,10 @@ python manage.py test chat
 ## Production notes
 
 - Set a strong `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=0`, and real `DJANGO_ALLOWED_HOSTS`
+- If your frontend is on Vercel, set `DJANGO_CORS_ALLOWED_ORIGINS` and `DJANGO_CSRF_TRUSTED_ORIGINS` to the Vercel app URL
 - Replace the in-memory channel layer with Redis (`channels-redis`) when running more than one worker
 - Serve behind an ASGI server (Daphne / Uvicorn) with a reverse proxy that supports WebSockets
+- For Render backend deployments, choose the repository root: `/home/chere970/projects/chat`
 
 ## License
 
