@@ -156,7 +156,7 @@ export default function Home() {
       </main>
 
       <footer className="home-footer">
-        <p>Built with Django · Channels · React · ❤️</p>
+        <p>Built to make your conversations <span className="gradient-text">fast</span> · ❤️</p>
       </footer>
     </div>
   )
