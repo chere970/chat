@@ -20,7 +20,7 @@ from rest_framework.response import Response
 
 from .models import PhoneOTP, Room
 from .serializers import RoomSerializer, SendOTPSerializer, VerifyOTPSerializer
-from .sms import is_production_sms, send_otp_sms
+from .sms import is_production_sms, send_room_otp, verify_room_otp
 
 logger = logging.getLogger(__name__)
 
@@ -86,10 +86,10 @@ def room_detail(request, room_slug):
 
 @api_view(["POST"])
 def send_otp(request):
-    """Generate and 'send' an OTP for a protected room.
+    """Generate and send an OTP for a protected room.
 
-    In production, integrate with Twilio/Vonage/etc. to send an SMS.
-    For demo purposes, the OTP is returned in the response.
+    Uses AfroMessage /api/challenge when configured, otherwise sends a
+    locally-generated code via Twilio or console (dev mode).
     """
     serializer = SendOTPSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -138,22 +138,27 @@ def send_otp(request):
         phone_number=phone_number, room=room, is_verified=False
     ).update(is_verified=True)
 
-    # Create new OTP
+    # Create new OTP record and send via configured SMS backend
     otp = PhoneOTP(
         phone_number=phone_number,
         room=room,
         expires_at=timezone.now() + timezone.timedelta(minutes=5),
     )
-    otp.save()
 
-    # Send the OTP via SMS (Twilio if configured, console fallback otherwise)
-    sms_sent = send_otp_sms(phone_number, otp.code, room.name)
-    if not sms_sent:
+    result = send_room_otp(phone_number, room.name)
+    if not result:
         logger.error("Failed to send OTP SMS to %s for room %s", phone_number, room.slug)
         return Response(
             {"error": "Failed to send SMS. Please try again later."},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+    if "verification_id" in result:
+        otp.verification_id = result["verification_id"]
+    else:
+        otp.code = result["code"]
+
+    otp.save()
 
     response_data = {
         "message": "OTP sent successfully.",
@@ -217,7 +222,14 @@ def verify_otp(request):
             status=status.HTTP_429_TOO_MANY_REQUESTS,
         )
 
-    if otp.code != code:
+    if otp.verification_id:
+        if not verify_room_otp(phone_number, code, otp.verification_id):
+            remaining = 5 - otp.attempts
+            return Response(
+                {"error": f"Invalid OTP code. {remaining} attempts remaining."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+    elif otp.code != code:
         remaining = 5 - otp.attempts
         return Response(
             {"error": f"Invalid OTP code. {remaining} attempts remaining."},

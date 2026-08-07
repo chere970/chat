@@ -6,4 +6,5 @@ django-cors-headers==4.9.0
 psycopg2-binary
 channels-redis
 requests
+python-dotenv
 # twilio  # optional — only needed if using Twilio SMS backend

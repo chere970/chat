@@ -20,7 +20,7 @@ class MessageAdmin(admin.ModelAdmin):
 
 @admin.register(PhoneOTP)
 class PhoneOTPAdmin(admin.ModelAdmin):
-    list_display = ("phone_number", "room", "code", "is_verified", "attempts", "created_at", "expires_at")
+    list_display = ("phone_number", "room", "code", "verification_id", "is_verified", "attempts", "created_at", "expires_at")
     list_filter = ("is_verified", "room", "created_at")
-    search_fields = ("phone_number", "code")
-    readonly_fields = ("code", "created_at")
+    search_fields = ("phone_number", "code", "verification_id")
+    readonly_fields = ("code", "verification_id", "created_at")

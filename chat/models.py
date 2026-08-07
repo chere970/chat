@@ -51,7 +51,8 @@ class PhoneOTP(models.Model):
 
     phone_number = models.CharField(max_length=20)
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="otps")
-    code = models.CharField(max_length=6)
+    code = models.CharField(max_length=6, blank=True, default="")
+    verification_id = models.CharField(max_length=64, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
     is_verified = models.BooleanField(default=False)
@@ -64,7 +65,7 @@ class PhoneOTP(models.Model):
         return f"OTP {self.code} for {self.phone_number} → {self.room.name}"
 
     def save(self, *args, **kwargs):
-        if not self.code:
+        if not self.code and not self.verification_id:
             self.code = "".join(random.choices(string.digits, k=6))
         if not self.expires_at:
             self.expires_at = timezone.now() + timezone.timedelta(minutes=5)

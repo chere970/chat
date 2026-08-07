@@ -35,6 +35,13 @@ Optional env vars (see `.env.example`):
 | `DJANGO_CSRF_TRUSTED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Trusted browser origins |
 | `DATABASE_URL` | unset | Postgres connection URL (e.g. from Neon/Render) |
 | `REDIS_URL` | unset | Redis connection URL for Channels (optional) |
+| `SMS_BACKEND` | auto-detected | `"afromessage"`, `"twilio"`, or `"console"` |
+| `AFROMESSAGE_TOKEN` | unset | AfroMessage API token ([afromessage.com](https://afromessage.com)) |
+| `AFROMESSAGE_IDENTIFIER_ID` | unset | Short-code identifier (if you have multiple) |
+| `AFROMESSAGE_SENDER` | unset | Verified sender name (required outside beta) |
+| `TWILIO_ACCOUNT_SID` | unset | Twilio account SID |
+| `TWILIO_AUTH_TOKEN` | unset | Twilio auth token |
+| `TWILIO_PHONE_NUMBER` | unset | Twilio sending number |
 
 ## Architecture
 
