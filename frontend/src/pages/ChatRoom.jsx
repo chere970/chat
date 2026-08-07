@@ -29,6 +29,7 @@ export default function ChatRoom() {
   const [nameInput, setNameInput] = useState('')
   const [error, setError] = useState('')
   const [otpVerified, setOtpVerified] = useState(false)
+  const [accessToken, setAccessToken] = useState('')
 
   const listRef = useRef(null)
   const inputRef = useRef(null)
@@ -40,12 +41,17 @@ export default function ChatRoom() {
   useEffect(() => {
     fetchRoom(roomSlug).then((r) => {
       setRoom(r)
-      // Check if already verified this session
       if (r.is_protected) {
         const key = `otp-verified-${r.slug}`
+        const tokenKey = `otp-token-${r.slug}`
         const verified = sessionStorage.getItem(key)
-        if (verified) {
+        const token = sessionStorage.getItem(tokenKey)
+        if (verified && token) {
           setOtpVerified(true)
+          setAccessToken(token)
+        } else {
+          sessionStorage.removeItem(key)
+          sessionStorage.removeItem(tokenKey)
         }
       } else {
         setOtpVerified(true) // open rooms don't need OTP
@@ -89,8 +95,17 @@ export default function ChatRoom() {
   const { send, status } = useWebSocket(
     shouldConnect ? roomSlug : null,
     username,
-    handleWsMessage
+    handleWsMessage,
+    accessToken
   )
+
+  useEffect(() => {
+    if (status !== 'unauthorized' || !room?.is_protected) return
+    sessionStorage.removeItem(`otp-verified-${room.slug}`)
+    sessionStorage.removeItem(`otp-token-${room.slug}`)
+    setAccessToken('')
+    setOtpVerified(false)
+  }, [status, room])
 
   useEffect(() => {
     if (listRef.current) {
@@ -145,7 +160,15 @@ export default function ChatRoom() {
 
   // Show OTP gate for protected rooms that haven't been verified
   if (room.is_protected && !otpVerified) {
-    return <OTPGate room={room} onVerified={() => setOtpVerified(true)} />
+    return (
+      <OTPGate
+        room={room}
+        onVerified={(token) => {
+          setAccessToken(token)
+          setOtpVerified(true)
+        }}
+      />
+    )
   }
 
   if (needsName) {

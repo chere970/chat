@@ -4,6 +4,7 @@ from django.urls import reverse
 from channels.testing import WebsocketCommunicator
 
 from chat.models import Message, Room
+from chat.otp_tokens import issue_room_access_token
 from chatapp.asgi import application
 
 
@@ -55,4 +56,32 @@ class ChatConsumerTests(TestCase):
         self.assertTrue(
             await Message.objects.filter(room=room, content="Hello Relay").aexists()
         )
+        await communicator.disconnect()
+
+    async def test_protected_room_rejects_without_token(self):
+        await Room.objects.acreate(
+            name="Secret",
+            slug="secret",
+            phone_number="+15551234567",
+        )
+        communicator = WebsocketCommunicator(application, "/ws/chat/secret/")
+        connected, close_code = await communicator.connect()
+        self.assertFalse(connected)
+        self.assertEqual(close_code, 4401)
+
+    async def test_protected_room_accepts_with_valid_token(self):
+        room = await Room.objects.acreate(
+            name="Secret",
+            slug="secret",
+            phone_number="+15551234567",
+        )
+        token = issue_room_access_token(room.slug, room.phone_number)
+        communicator = WebsocketCommunicator(
+            application, f"/ws/chat/secret/?token={token}"
+        )
+        connected, _ = await communicator.connect()
+        self.assertTrue(connected)
+
+        history = await communicator.receive_json_from()
+        self.assertEqual(history["type"], "history")
         await communicator.disconnect()

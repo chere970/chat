@@ -45,12 +45,13 @@ export default function OTPGate({ room, onVerified }) {
     setError('')
     setLoading(true)
     try {
-      await verifyOTP(phoneNumber.trim(), room.slug, code)
+      const data = await verifyOTP(phoneNumber.trim(), room.slug, code)
       setStep('verified')
-      // Store verification in sessionStorage
       const key = `otp-verified-${room.slug}`
+      const tokenKey = `otp-token-${room.slug}`
       sessionStorage.setItem(key, Date.now().toString())
-      setTimeout(() => onVerified(), 600)
+      sessionStorage.setItem(tokenKey, data.access_token)
+      setTimeout(() => onVerified(data.access_token), 600)
     } catch (err) {
       setError(err.message)
       setOtp(['', '', '', '', '', ''])

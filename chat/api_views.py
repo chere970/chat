@@ -19,6 +19,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from .models import PhoneOTP, Room
+from .otp_tokens import issue_room_access_token
 from .serializers import RoomSerializer, SendOTPSerializer, VerifyOTPSerializer
 from .sms import is_production_sms, send_room_otp, verify_room_otp
 
@@ -240,11 +241,14 @@ def verify_otp(request):
     otp.is_verified = True
     otp.save(update_fields=["is_verified"])
 
+    access_token = issue_room_access_token(room.slug, phone_number)
+
     return Response(
         {
             "message": "OTP verified successfully.",
             "room_slug": room.slug,
             "verified": True,
+            "access_token": access_token,
         },
         status=status.HTTP_200_OK,
     )

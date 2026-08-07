@@ -1,10 +1,12 @@
 import re
 from collections import defaultdict
+from urllib.parse import parse_qs
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 from .models import Message, Room
+from .otp_tokens import verify_room_access_token
 
 USERNAME_RE = re.compile(r"^[\w .-]{2,32}$")
 SLUG_RE = re.compile(r"^[-a-zA-Z0-9_]{1,64}$")
@@ -26,6 +28,14 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         self.room = await self.get_room(self.room_slug)
         if self.room is None:
             await self.close()
+            return
+
+        if self.room.is_protected and not verify_room_access_token(
+            self._access_token_from_query(),
+            self.room_slug,
+            self.room.phone_number,
+        ):
+            await self.close(code=4401)
             return
 
         self.room_group = f"chat_{self.room_slug}"
@@ -198,6 +208,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 "reactions": event["reactions"],
             }
         )
+
+    def _access_token_from_query(self) -> str:
+        raw = self.scope.get("query_string", b"")
+        if isinstance(raw, bytes):
+            raw = raw.decode()
+        tokens = parse_qs(raw).get("token", [])
+        return tokens[0] if tokens else ""
 
     # ── DB helpers ───────────────────────────────────────────────────
 

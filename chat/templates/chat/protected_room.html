@@ -1,0 +1,18 @@
+{% extends "chat/base.html" %}
+
+{% block title %}{{ room.name }} · Relay{% endblock %}
+{% block body_class %}page-room{% endblock %}
+
+{% block content %}
+  <header class="room-top">
+    <a class="brand brand-compact" href="{% url 'home' %}">Relay</a>
+  </header>
+  <section class="join-gate">
+    <h2>Phone verification required</h2>
+    <p>
+      <strong>{{ room.name }}</strong> is OTP-protected. Open this room in the Relay app
+      and verify the registered phone number to join.
+    </p>
+    <a class="btn-primary" href="/">Back to rooms</a>
+  </section>
+{% endblock %}

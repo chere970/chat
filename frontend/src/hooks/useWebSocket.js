@@ -1,14 +1,14 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
 import { getWebSocketUrl } from '../config'
 
-export function useWebSocket(roomSlug, username, onMessage) {
+export function useWebSocket(roomSlug, username, onMessage, accessToken = '') {
   const wsRef = useRef(null)
   const reconnectRef = useRef(null)
   const [status, setStatus] = useState('connecting')
 
   const connect = useCallback(() => {
     if (!roomSlug) return
-    const url = getWebSocketUrl(roomSlug)
+    const url = getWebSocketUrl(roomSlug, accessToken)
     const ws = new WebSocket(url)
     wsRef.current = ws
 
@@ -17,7 +17,11 @@ export function useWebSocket(roomSlug, username, onMessage) {
       if (username) ws.send(JSON.stringify({ type: 'join', username }))
     }
 
-    ws.onclose = () => {
+    ws.onclose = (event) => {
+      if (event.code === 4401) {
+        setStatus('unauthorized')
+        return
+      }
       setStatus('reconnecting')
       clearTimeout(reconnectRef.current)
       reconnectRef.current = setTimeout(connect, 1500)
@@ -28,7 +32,7 @@ export function useWebSocket(roomSlug, username, onMessage) {
     ws.onmessage = (e) => {
       try { onMessage(JSON.parse(e.data)) } catch {}
     }
-  }, [roomSlug, username, onMessage])
+  }, [roomSlug, username, onMessage, accessToken])
 
   useEffect(() => {
     connect()

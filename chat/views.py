@@ -67,6 +67,12 @@ def create_room(request):
 
 def room(request, room_slug):
     chat_room = get_object_or_404(Room, slug=room_slug)
+    if chat_room.is_protected:
+        return render(
+            request,
+            "chat/protected_room.html",
+            {"room": chat_room},
+        )
     history = list(chat_room.messages.order_by("-created_at")[:80])
     history.reverse()
     display_name = request.session.get("display_name", "")
