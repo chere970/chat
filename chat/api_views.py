@@ -8,6 +8,7 @@ Endpoints:
   POST /api/otp/send/         — send OTP to a phone number for a room
   POST /api/otp/verify/       — verify OTP code
 """
+import logging
 import re
 
 from django.db.models import Count
@@ -19,6 +20,9 @@ from rest_framework.response import Response
 
 from .models import PhoneOTP, Room
 from .serializers import RoomSerializer, SendOTPSerializer, VerifyOTPSerializer
+from .sms import is_production_sms, send_otp_sms
+
+logger = logging.getLogger(__name__)
 
 ROOM_NAME_RE = re.compile(r"^[\w .-]{2,64}$")
 PHONE_RE = re.compile(r"^\+?[1-9]\d{6,14}$")
@@ -142,20 +146,27 @@ def send_otp(request):
     )
     otp.save()
 
-    # ──────────────────────────────────────────────────────────────
-    # TODO: In production, send the OTP via SMS here using
-    # Twilio, Vonage, AWS SNS, etc. For now we return it in the
-    # response so the demo works without external services.
-    # ──────────────────────────────────────────────────────────────
+    # Send the OTP via SMS (Twilio if configured, console fallback otherwise)
+    sms_sent = send_otp_sms(phone_number, otp.code, room.name)
+    if not sms_sent:
+        logger.error("Failed to send OTP SMS to %s for room %s", phone_number, room.slug)
+        return Response(
+            {"error": "Failed to send SMS. Please try again later."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
-    return Response(
-        {
-            "message": "OTP sent successfully.",
-            "otp_code": otp.code,  # DEMO ONLY – remove in production
-            "expires_in": 300,
-        },
-        status=status.HTTP_200_OK,
-    )
+    response_data = {
+        "message": "OTP sent successfully.",
+        "expires_in": 300,
+    }
+
+    # Only include the OTP code in the response when no real SMS provider is
+    # configured (development/demo mode). In production the code is delivered
+    # exclusively via SMS.
+    if not is_production_sms():
+        response_data["otp_code"] = otp.code  # DEV ONLY
+
+    return Response(response_data, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])

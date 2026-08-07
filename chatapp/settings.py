@@ -177,3 +177,28 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
 }
+
+# ── SMS Backend Configuration ────────────────────────────────────
+# Set SMS_BACKEND to explicitly choose a provider:
+#   "afromessage" — AfroMessage (recommended for Ethiopia)
+#   "twilio"      — Twilio
+#   "console"     — print to console (default for development)
+#
+# If SMS_BACKEND is not set, auto-detects from which env vars are present.
+SMS_BACKEND = os.environ.get("SMS_BACKEND", "")
+
+# ── AfroMessage (afromessage.com) ────────────────────────────────
+# Best option for Ethiopia — direct Ethio Telecom integration.
+# Sign up at: https://afromessage.com
+#   AFROMESSAGE_TOKEN          — API token from your dashboard
+#   AFROMESSAGE_IDENTIFIER_ID  — (optional) short code identifier
+#   AFROMESSAGE_SENDER         — (optional) verified sender name
+AFROMESSAGE_TOKEN = os.environ.get("AFROMESSAGE_TOKEN", "")
+AFROMESSAGE_IDENTIFIER_ID = os.environ.get("AFROMESSAGE_IDENTIFIER_ID", "")
+AFROMESSAGE_SENDER = os.environ.get("AFROMESSAGE_SENDER", "")
+
+# ── Twilio (twilio.com) ─────────────────────────────────────────
+# Get your credentials at: https://console.twilio.com/
+TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "")
+TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "")
+TWILIO_PHONE_NUMBER = os.environ.get("TWILIO_PHONE_NUMBER", "")
