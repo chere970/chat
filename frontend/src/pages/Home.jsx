@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Sun, Moon, MessageSquare, Plus, ArrowRight, Zap, Users, Shield } from 'lucide-react'
+import { Sun, Moon, MessageSquare, Plus, ArrowRight, Zap, Users, Shield, Phone, Lock } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useUser } from '../context/UserContext'
 import { fetchRooms, createRoom } from '../api'
@@ -15,6 +15,8 @@ export default function Home() {
   const [rooms, setRooms] = useState([])
   const [name, setName] = useState(username)
   const [roomName, setRoomName] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [showPhoneField, setShowPhoneField] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -28,9 +30,13 @@ export default function Home() {
     const displayName = name.trim()
     if (displayName.length < 2) { setError('Name must be at least 2 characters'); return }
     if (!roomName.trim()) { setError('Enter a room name'); return }
+    if (showPhoneField && phoneNumber.trim() && !/^\+?[1-9]\d{6,14}$/.test(phoneNumber.trim())) {
+      setError('Invalid phone number. Use format like +1234567890')
+      return
+    }
     setUsername(displayName)
     try {
-      const room = await createRoom(roomName.trim())
+      const room = await createRoom(roomName.trim(), showPhoneField ? phoneNumber.trim() : '')
       navigate(`/rooms/${room.slug}`)
     } catch (err) {
       setError(err.message)
@@ -92,9 +98,40 @@ export default function Home() {
                 />
               </div>
             </div>
-            <button type="submit" className="btn-primary" id="create-room-btn">
-              <Plus size={18} /> Open Room
-            </button>
+
+            {showPhoneField && (
+              <div className="phone-field-row" style={{ animation: 'slideUp 0.3s ease both' }}>
+                <div className="field">
+                  <label><Phone size={13} /> Phone number for OTP protection</label>
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={e => setPhoneNumber(e.target.value)}
+                    placeholder="+1234567890"
+                    maxLength={20}
+                    id="phone-number-input"
+                  />
+                  <span className="field-hint">
+                    Only users who verify this phone number can join the room.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="form-actions">
+              <button type="submit" className="btn-primary" id="create-room-btn">
+                <Plus size={18} /> Open Room
+              </button>
+              <button
+                type="button"
+                className={`btn-phone-toggle ${showPhoneField ? 'active' : ''}`}
+                onClick={() => { setShowPhoneField(!showPhoneField); if (showPhoneField) setPhoneNumber('') }}
+                id="toggle-phone-btn"
+              >
+                {showPhoneField ? <Lock size={16} /> : <Shield size={16} />}
+                {showPhoneField ? 'Remove Protection' : 'Add Phone OTP'}
+              </button>
+            </div>
             {error && <p className="form-error">{error}</p>}
           </form>
         </section>
@@ -112,8 +149,8 @@ export default function Home() {
           </div>
           <div className="feature-card">
             <div className="feature-icon"><Shield size={22} /></div>
-            <h3>No Account Needed</h3>
-            <p>Just pick a display name and you're in. No signup required.</p>
+            <h3>Phone OTP Rooms</h3>
+            <p>Protect rooms with phone number verification for secure access.</p>
           </div>
         </section>
 
@@ -135,9 +172,17 @@ export default function Home() {
                       <Avatar name={room.name} size="lg" />
                     </div>
                     <div className="room-card-info">
-                      <span className="room-card-name">{room.name}</span>
+                      <span className="room-card-name">
+                        {room.name}
+                        {room.is_protected && (
+                          <span className="room-protected-badge" title="OTP protected">
+                            <Lock size={12} />
+                          </span>
+                        )}
+                      </span>
                       <span className="room-card-meta">
                         {room.message_count} message{room.message_count !== 1 ? 's' : ''} · {formatRelative(room.created_at)}
+                        {room.is_protected && ' · 🔐 Protected'}
                       </span>
                     </div>
                     <ArrowRight size={18} className="room-card-arrow" />

@@ -1,0 +1,283 @@
+.otp-gate {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+.otp-card {
+  width: min(440px, calc(100% - 2rem));
+  padding: 2.5rem 2rem;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(24px);
+  box-shadow: var(--shadow);
+  animation: slideUp 0.5s ease both;
+  text-align: center;
+}
+
+.otp-lock-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 1.2rem;
+  border-radius: 50%;
+  background: var(--accent-gradient);
+  color: #fff;
+  animation: float 3s ease-in-out infinite;
+}
+
+.otp-card h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.25rem;
+}
+
+.otp-room-name {
+  font-size: 0.9rem;
+  color: var(--accent-hover);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.otp-desc {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.otp-desc strong {
+  color: var(--text);
+}
+
+/* Phone input form */
+.otp-phone-form {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.otp-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.otp-input-icon {
+  position: absolute;
+  left: 1rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.otp-input-group input {
+  width: 100%;
+  padding: 0.95rem 1rem 0.95rem 2.8rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  transition: all var(--transition);
+}
+
+.otp-input-group input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.otp-input-group input::placeholder {
+  color: var(--text-muted);
+}
+
+.otp-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.95rem 1.6rem;
+  border-radius: var(--radius-sm);
+  background: var(--accent-gradient);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all var(--transition);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+}
+
+.otp-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+}
+
+.otp-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.otp-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Demo banner */
+.otp-demo-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--success);
+  font-size: 0.82rem;
+  font-weight: 500;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  animation: fadeIn 0.4s ease both;
+}
+
+.otp-demo-banner strong {
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  font-size: 0.95rem;
+}
+
+/* OTP digit inputs */
+.otp-digits {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.otp-digit {
+  width: 3.2rem;
+  height: 3.8rem;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-family: var(--font-display);
+  letter-spacing: 0;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--glass-border);
+  background: var(--surface);
+  color: var(--text);
+  transition: all var(--transition);
+  caret-color: var(--accent);
+}
+
+.otp-digit:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  transform: translateY(-2px);
+}
+
+.otp-digit.filled {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+
+/* Meta row (countdown + resend) */
+.otp-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.82rem;
+}
+
+.otp-countdown {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.otp-resend-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all var(--transition);
+}
+
+.otp-resend-btn:hover:not(:disabled) {
+  color: var(--accent-hover);
+}
+
+.otp-resend-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.otp-back-btn {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  transition: color var(--transition);
+}
+
+.otp-back-btn:hover {
+  color: var(--text);
+}
+
+/* Error message */
+.otp-error {
+  margin-top: 1rem;
+  color: var(--danger);
+  font-size: 0.85rem;
+  animation: fadeIn 0.3s ease both;
+}
+
+/* Verified state */
+.otp-verified-card {
+  text-align: center;
+}
+
+.otp-verified-icon {
+  width: 4.5rem;
+  height: 4.5rem;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+  animation: bounceIn 0.6s ease both;
+}
+
+.otp-verified-card h2 {
+  color: var(--success);
+  margin-bottom: 0.3rem;
+}
+
+.otp-verified-card p {
+  color: var(--text-secondary);
+}
+
+/* Spin animation reuse */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@media (max-width: 480px) {
+  .otp-card {
+    padding: 2rem 1.2rem;
+  }
+
+  .otp-digit {
+    width: 2.6rem;
+    height: 3.2rem;
+    font-size: 1.2rem;
+  }
+
+  .otp-digits {
+    gap: 0.4rem;
+  }
+}

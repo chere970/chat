@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Send, Sun, Moon, Users, Wifi, WifiOff, Loader } from 'lucide-react'
+import { ArrowLeft, Send, Sun, Moon, Users, Wifi, WifiOff, Loader, Lock } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useUser } from '../context/UserContext'
 import { useWebSocket } from '../hooks/useWebSocket'
@@ -9,6 +9,7 @@ import { playNotificationSound } from '../utils'
 import Avatar from '../components/Avatar'
 import MessageBubble from '../components/MessageBubble'
 import TypingIndicator from '../components/TypingIndicator'
+import OTPGate from '../components/OTPGate'
 import './ChatRoom.css'
 
 export default function ChatRoom() {
@@ -27,6 +28,7 @@ export default function ChatRoom() {
   const [needsName, setNeedsName] = useState(!username)
   const [nameInput, setNameInput] = useState('')
   const [error, setError] = useState('')
+  const [otpVerified, setOtpVerified] = useState(false)
 
   const listRef = useRef(null)
   const inputRef = useRef(null)
@@ -36,7 +38,19 @@ export default function ChatRoom() {
   const typingTimers = useRef({})
 
   useEffect(() => {
-    fetchRoom(roomSlug).then(setRoom).catch(() => navigate('/'))
+    fetchRoom(roomSlug).then((r) => {
+      setRoom(r)
+      // Check if already verified this session
+      if (r.is_protected) {
+        const key = `otp-verified-${r.slug}`
+        const verified = sessionStorage.getItem(key)
+        if (verified) {
+          setOtpVerified(true)
+        }
+      } else {
+        setOtpVerified(true) // open rooms don't need OTP
+      }
+    }).catch(() => navigate('/'))
   }, [roomSlug, navigate])
 
   const handleWsMessage = useCallback((data) => {
@@ -70,8 +84,10 @@ export default function ChatRoom() {
     }
   }, [username])
 
+  // Only connect WebSocket when OTP is verified (or room is open) AND name is set
+  const shouldConnect = otpVerified && !needsName
   const { send, status } = useWebSocket(
-    needsName ? null : roomSlug,
+    shouldConnect ? roomSlug : null,
     username,
     handleWsMessage
   )
@@ -127,11 +143,21 @@ export default function ChatRoom() {
     )
   }
 
+  // Show OTP gate for protected rooms that haven't been verified
+  if (room.is_protected && !otpVerified) {
+    return <OTPGate room={room} onVerified={() => setOtpVerified(true)} />
+  }
+
   if (needsName) {
     return (
       <div className="name-gate">
         <div className="name-gate-card">
           <h2>Join {room.name}</h2>
+          {room.is_protected && (
+            <div className="name-gate-verified-badge">
+              <Lock size={14} /> OTP Verified
+            </div>
+          )}
           <p>Choose a display name to start chatting.</p>
           <form onSubmit={handleSetName}>
             <input
@@ -165,6 +191,11 @@ export default function ChatRoom() {
               <span className="header-brand">Relay</span>
               <span className="header-sep">/</span>
               <h1>{room.name}</h1>
+              {room.is_protected && (
+                <span className="header-lock" title="OTP Protected Room">
+                  <Lock size={13} />
+                </span>
+              )}
             </div>
             <div className="header-status">
               <span className={`status-dot status-${status}`} />

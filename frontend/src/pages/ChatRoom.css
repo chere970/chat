@@ -29,6 +29,18 @@
 .btn-join:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99,102,241,0.4); }
 .gate-error { color: var(--danger); font-size: 0.85rem; }
 
+.name-gate-verified-badge {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.3rem 0.7rem; margin-bottom: 0.8rem;
+  border-radius: 999px; background: rgba(34,197,94,0.12); color: var(--success);
+  font-size: 0.78rem; font-weight: 600; border: 1px solid rgba(34,197,94,0.2);
+}
+
+.header-lock {
+  display: inline-flex; align-items: center; margin-left: 0.35rem;
+  color: var(--accent); opacity: 0.7;
+}
+
 .chat-header {
   display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1rem;
   background: var(--glass); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border);

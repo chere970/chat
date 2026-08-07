@@ -25,13 +25,15 @@ export async function fetchRooms() {
   return parseJson(res)
 }
 
-export async function createRoom(name) {
+export async function createRoom(name, phoneNumber = '') {
   let res
   try {
+    const body = { name }
+    if (phoneNumber) body.phone_number = phoneNumber
     res = await fetch(`${BASE}/rooms/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify(body),
     })
   } catch {
     throw new Error('Cannot reach API. Start Django: python manage.py runserver')
@@ -49,4 +51,26 @@ export async function fetchRoom(slug) {
     throw new Error('Failed to load room — is Django running on :8000?')
   }
   return parseJson(res)
+}
+
+export async function sendOTP(phoneNumber, roomSlug) {
+  const res = await fetch(`${BASE}/otp/send/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone_number: phoneNumber, room_slug: roomSlug }),
+  })
+  const data = await parseJson(res)
+  if (!res.ok) throw new Error(data.error || 'Failed to send OTP')
+  return data
+}
+
+export async function verifyOTP(phoneNumber, roomSlug, code) {
+  const res = await fetch(`${BASE}/otp/verify/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone_number: phoneNumber, room_slug: roomSlug, code }),
+  })
+  const data = await parseJson(res)
+  if (!res.ok) throw new Error(data.error || 'Invalid OTP')
+  return data
 }

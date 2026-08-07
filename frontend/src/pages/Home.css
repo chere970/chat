@@ -56,6 +56,32 @@
 }
 .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99,102,241,0.4); }
 .btn-primary:active { transform: translateY(0); }
+
+.form-actions {
+  display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;
+}
+
+.btn-phone-toggle {
+  display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.7rem 1.2rem;
+  border-radius: var(--radius-sm); border: 1px solid var(--glass-border);
+  background: var(--surface); color: var(--text-secondary);
+  font-size: 0.85rem; font-weight: 600; transition: all var(--transition);
+}
+.btn-phone-toggle:hover { background: var(--surface-hover); color: var(--text); border-color: var(--accent); }
+.btn-phone-toggle.active { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
+
+.phone-field-row {
+  margin-bottom: 0.8rem;
+}
+.field-hint {
+  font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; display: block;
+}
+
+.room-protected-badge {
+  display: inline-flex; align-items: center; margin-left: 0.4rem;
+  color: var(--accent); vertical-align: middle;
+}
+
 .form-error { margin-top: 0.6rem; color: var(--danger); font-size: 0.85rem; }
 
 .features {

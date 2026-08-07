@@ -3,21 +3,25 @@ REST API views consumed by the React frontend.
 
 Endpoints:
   GET  /api/rooms/            — list rooms (latest 50)
-  POST /api/rooms/            — create a room
+  POST /api/rooms/            — create a room (optionally with phone_number)
   GET  /api/rooms/<slug>/     — single room detail
+  POST /api/otp/send/         — send OTP to a phone number for a room
+  POST /api/otp/verify/       — verify OTP code
 """
+import re
+
 from django.db.models import Count
+from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Room
-from .serializers import RoomSerializer
-
-import re
+from .models import PhoneOTP, Room
+from .serializers import RoomSerializer, SendOTPSerializer, VerifyOTPSerializer
 
 ROOM_NAME_RE = re.compile(r"^[\w .-]{2,64}$")
+PHONE_RE = re.compile(r"^\+?[1-9]\d{6,14}$")
 
 
 @api_view(["GET", "POST"])
@@ -31,9 +35,17 @@ def room_list(request):
 
     # POST — create room
     name = (request.data.get("name") or "").strip()
+    phone_number = (request.data.get("phone_number") or "").strip()
+
     if not ROOM_NAME_RE.match(name):
         return Response(
             {"error": "Room name must be 2–64 chars (letters, numbers, spaces, . - _)."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if phone_number and not PHONE_RE.match(phone_number):
+        return Response(
+            {"error": "Invalid phone number. Use format like +1234567890."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -44,7 +56,11 @@ def room_list(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    room, created = Room.objects.get_or_create(slug=slug, defaults={"name": name})
+    defaults = {"name": name}
+    if phone_number:
+        defaults["phone_number"] = phone_number
+
+    room, created = Room.objects.get_or_create(slug=slug, defaults=defaults)
     room = Room.objects.annotate(message_count=Count("messages")).get(pk=room.pk)
     serializer = RoomSerializer(room)
     return Response(
@@ -62,3 +78,150 @@ def room_detail(request, room_slug):
 
     serializer = RoomSerializer(room)
     return Response(serializer.data)
+
+
+@api_view(["POST"])
+def send_otp(request):
+    """Generate and 'send' an OTP for a protected room.
+
+    In production, integrate with Twilio/Vonage/etc. to send an SMS.
+    For demo purposes, the OTP is returned in the response.
+    """
+    serializer = SendOTPSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    phone_number = serializer.validated_data["phone_number"]
+    room_slug = serializer.validated_data["room_slug"]
+
+    if not PHONE_RE.match(phone_number):
+        return Response(
+            {"error": "Invalid phone number format."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        room = Room.objects.get(slug=room_slug)
+    except Room.DoesNotExist:
+        return Response({"error": "Room not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if not room.is_protected:
+        return Response(
+            {"error": "This room does not require OTP verification."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Check if the phone number matches the room's registered number
+    if phone_number != room.phone_number:
+        return Response(
+            {"error": "This phone number is not authorized for this room."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # Rate limit: max 3 OTPs per phone per room in the last 10 minutes
+    recent_count = PhoneOTP.objects.filter(
+        phone_number=phone_number,
+        room=room,
+        created_at__gte=timezone.now() - timezone.timedelta(minutes=10),
+    ).count()
+    if recent_count >= 3:
+        return Response(
+            {"error": "Too many OTP requests. Please wait before trying again."},
+            status=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
+
+    # Invalidate previous unused OTPs
+    PhoneOTP.objects.filter(
+        phone_number=phone_number, room=room, is_verified=False
+    ).update(is_verified=True)
+
+    # Create new OTP
+    otp = PhoneOTP(
+        phone_number=phone_number,
+        room=room,
+        expires_at=timezone.now() + timezone.timedelta(minutes=5),
+    )
+    otp.save()
+
+    # ──────────────────────────────────────────────────────────────
+    # TODO: In production, send the OTP via SMS here using
+    # Twilio, Vonage, AWS SNS, etc. For now we return it in the
+    # response so the demo works without external services.
+    # ──────────────────────────────────────────────────────────────
+
+    return Response(
+        {
+            "message": "OTP sent successfully.",
+            "otp_code": otp.code,  # DEMO ONLY – remove in production
+            "expires_in": 300,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST"])
+def verify_otp(request):
+    """Verify an OTP code for room access."""
+    serializer = VerifyOTPSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    phone_number = serializer.validated_data["phone_number"]
+    room_slug = serializer.validated_data["room_slug"]
+    code = serializer.validated_data["code"]
+
+    try:
+        room = Room.objects.get(slug=room_slug)
+    except Room.DoesNotExist:
+        return Response({"error": "Room not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    # Find the latest unverified OTP for this phone+room
+    otp = (
+        PhoneOTP.objects.filter(
+            phone_number=phone_number,
+            room=room,
+            is_verified=False,
+        )
+        .order_by("-created_at")
+        .first()
+    )
+
+    if not otp:
+        return Response(
+            {"error": "No OTP found. Please request a new one."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    # Track attempts
+    otp.attempts += 1
+    otp.save(update_fields=["attempts"])
+
+    if otp.is_expired:
+        return Response(
+            {"error": "OTP has expired. Please request a new one."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if otp.attempts > 5:
+        return Response(
+            {"error": "Too many failed attempts. Please request a new OTP."},
+            status=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
+
+    if otp.code != code:
+        remaining = 5 - otp.attempts
+        return Response(
+            {"error": f"Invalid OTP code. {remaining} attempts remaining."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Mark as verified
+    otp.is_verified = True
+    otp.save(update_fields=["is_verified"])
+
+    return Response(
+        {
+            "message": "OTP verified successfully.",
+            "room_slug": room.slug,
+            "verified": True,
+        },
+        status=status.HTTP_200_OK,
+    )
